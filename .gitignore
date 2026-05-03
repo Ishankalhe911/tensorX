@@ -1,0 +1,16 @@
+# Virtual Environments (This stops the packages/libs from uploading!)
+venv/
+env/
+
+# Python Cache (Stops annoying temporary files)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables (CRUCIAL: Stops your secret API keys from being stolen)
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db

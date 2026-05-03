@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KhataSync — Kirana Credit Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+  /* ─── CSS Variables ─────────────────────────────────────────── */
+  :root {
+    --navy:    #0D1B2A;
+    --navy2:   #152236;
+    --indigo:  #3A5FCD;
+    --indigo2: #2A4AAD;
+    --mint:    #00C9A7;
+    --mint2:   #00A98A;
+    --white:   #FFFFFF;
+    --light:   #E8EDF5;
+    --muted:   #8A9BB5;
+    --warn:    #F4A261;
+    --red:     #E74C3C;
+    --green:   #2ECC71;
+    --card:    #152236;
+    --r: 12px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── Background grid ───────────────────────────────────────── */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(58,95,205,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(58,95,205,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ─── Layout ────────────────────────────────────────────────── */
+  #app {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: 24px 20px 40px;
+    animation: fadeUp .35s ease both;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(18px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ─── Header bar ────────────────────────────────────────────── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 0;
+    position: relative;
+    z-index:2;
+  }
+  .brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--mint);
+    letter-spacing: .08em;
+  }
+  .step-pill {
+    background: var(--card);
+    border: 1px solid rgba(58,95,205,.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ─── Typography ────────────────────────────────────────────── */
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .accent { color: var(--mint); }
+  .mono {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ─── Buttons ───────────────────────────────────────────────── */
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-radius: var(--r);
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    transition: all .2s ease;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--mint);
+    color: var(--navy);
+    padding: 15px 28px;
+    width: 100%;
+  }
+  .btn-primary:hover { background: var(--mint2); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,.2);
+    color: var(--muted);
+    padding: 12px 20px;
+    width: 100%;
+    font-size: 13px;
+  }
+  .btn-outline:hover { border-color: var(--mint); color: var(--mint); }
+
+  .btn-indigo {
+    background: var(--indigo);
+    color: var(--white);
+    padding: 14px 24px;
+    width: 100%;
+  }
+  .btn-indigo:hover { background: var(--indigo2); }
+
+  .btn-sm {
+    padding: 9px 16px;
+    font-size: 12px;
+    width: auto;
+    border-radius: 8px;
+  }
+
+  /* ─── Cards ─────────────────────────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid rgba(58,95,205,.2);
+    border-radius: var(--r);
+    padding: 18px;
+  }
+  .card-highlight {
+    background: linear-gradient(135deg, rgba(58,95,205,.15), rgba(0,201,167,.08));
+    border-color: rgba(0,201,167,.3);
+  }
+
+  /* ─── Tag / badge ───────────────────────────────────────────── */
+  .tag {
+    display: inline-block;
+    background: rgba(58,95,205,.2);
+    border: 1px solid rgba(58,95,205,.4);
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--mint);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* ─── Input ─────────────────────────────────────────────────── */
+  input[type=text], input[type=number] {
+    background: var(--card);
+    border: 1.5px solid rgba(58,95,205,.3);
+    border-radius: 10px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 13px 16px;
+    width: 100%;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input[type=text]:focus, input[type=number]:focus {
+    border-color: var(--mint);
+  }
+  input::placeholder { color: var(--muted); }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  /* ─── Divider ───────────────────────────────────────────────── */
+  .divider {
+    height: 1px;
+    background: rgba(58,95,205,.2);
+    margin: 20px 0;
+  }
+
+  /* ─── Spacers ───────────────────────────────────────────────── */
+  .mt8  { margin-top: 8px; }
+  .mt12 { margin-top: 12px; }
+  .mt16 { margin-top: 16px; }
+  .mt20 { margin-top: 20px; }
+  .mt24 { margin-top: 24px; }
+  .gap8  { gap: 8px; }
+  .gap12 { gap: 12px; }
+  .flex  { display: flex; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .flex-1 { flex: 1; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ─── Progress bar ──────────────────────────────────────────── */
+  .progress-bar {
+    height: 4px;
+    background: rgba(58,95,205,.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--indigo), var(--mint));
+    border-radius: 2px;
+    transition: width .5s ease;
+  }
+
+  /* ─── Timer ─────────────────────────────────────────────────── */
+  .timer-ring {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+  }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring .track { fill: none; stroke: rgba(58,95,205,.2); stroke-width: 5; }
+  .timer-ring .fill  { fill: none; stroke: var(--mint); stroke-width: 5;
+    stroke-linecap: round; stroke-dasharray: 220; stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke .3s;
+  }
+  .timer-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  /* ─── Zone chip ─────────────────────────────────────────────── */
+  .zone-chip {
+    background: rgba(0,201,167,.1);
+    border: 1.5px solid rgba(0,201,167,.3);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mint);
+  }
+
+  /* ─── Upload area ───────────────────────────────────────────── */
+  .upload-area {
+    border: 2px dashed rgba(58,95,205,.4);
+    border-radius: var(--r);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .upload-area:hover, .upload-area.drag-over {
+    border-color: var(--mint);
+    background: rgba(0,201,167,.04);
+  }
+  .upload-area input[type=file] {
+    position: absolute; inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-preview {
+    width: 100%; height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-top: 10px;
+    display: none;
+  }
+
+  /* ─── Signal processing animation ──────────────────────────── */
+  .signal-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(58,95,205,.1);
+    opacity: .35;
+    transition: opacity .4s, transform .4s;
+    transform: translateX(-8px);
+  }
+  .signal-item.active  { opacity: 1; transform: translateX(0); }
+  .signal-item.done    { opacity: .7; transform: translateX(0); }
+  .signal-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background .3s;
+  }
+  .signal-item.active .signal-dot  { background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+  .signal-item.done   .signal-dot  { background: var(--green); }
+  .signal-label { font-size: 13px; flex: 1; }
+  .signal-status { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .signal-item.done .signal-status { color: var(--green); }
+
+  .pulse-ring {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(0,201,167,.12);
+    position: relative;
+    display: flex; align-items:center; justify-content:center;
+    margin: 0 auto 20px;
+  }
+  .pulse-ring::before {
+    content:'';
+    position:absolute; inset:-8px;
+    border-radius:50%;
+    border: 2px solid var(--mint);
+    animation: pulse 1.5s ease infinite;
+  }
+  @keyframes pulse {
+    0%   { transform:scale(1); opacity:.6; }
+    50%  { transform:scale(1.15); opacity:.2; }
+    100% { transform:scale(1); opacity:.6; }
+  }
+
+  /* ─── Credit report card ────────────────────────────────────── */
+  .rec-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .rec-approved { background: rgba(46,204,113,.15); border:1px solid rgba(46,204,113,.4); color: var(--green); }
+  .rec-verify   { background: rgba(244,162,97,.15);  border:1px solid rgba(244,162,97,.4);  color: var(--warn); }
+  .rec-reject   { background: rgba(231,76,60,.15);   border:1px solid rgba(231,76,60,.4);   color: var(--red); }
+
+  .score-ring {
+    width: 90px; height: 90px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .track { fill:none; stroke:rgba(58,95,205,.2); stroke-width:6; }
+  .score-ring .fill  { fill:none; stroke-width:6; stroke-linecap:round;
+    stroke-dasharray:251; stroke-dashoffset:251;
+    transition: stroke-dashoffset 1.2s ease .3s, stroke .3s;
+  }
+  .score-val {
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:20px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(58,95,205,.12);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { font-size: 12px; color: var(--muted); }
+  .stat-value { font-size: 13px; font-weight: 600; text-align: right; }
+
+  .risk-flag {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(231,76,60,.08);
+    border: 1px solid rgba(231,76,60,.25);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin-bottom: 6px;
+  }
+  .risk-flag span { font-size: 11px; color: #e87060; font-family:'DM Mono',monospace; }
+
+  .signal-bar {
+    height: 6px;
+    background: rgba(58,95,205,.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .signal-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--indigo), var(--mint));
+    transition: width 1s ease .5s;
+    width: 0%;
+  }
+
+  .json-block {
+    background: #0a1628;
+    border: 1px solid rgba(58,95,205,.25);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    color: var(--mint);
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.6;
+  }
+
+  /* ─── GPS indicator ─────────────────────────────────────────── */
+  .gps-row {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(0,201,167,.08);
+    border: 1px solid rgba(0,201,167,.2);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+  .gps-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--mint);
+    animation: blink 1.5s ease infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ─── Scrollable container ──────────────────────────────────── */
+  .scroll-content { overflow-y: auto; flex: 1; }
+
+  /* ─── Tab bar (result screen) ───────────────────────────────── */
+  .tab-bar {
+    display: flex;
+    background: var(--card);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+  .tab {
+    flex: 1; text-align: center;
+    padding: 8px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .2s;
+    border: none;
+    background: transparent;
+  }
+  .tab.active { background: var(--indigo); color: var(--white); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeUp .25s ease both; }
+
+  /* ─── Step dots ─────────────────────────────────────────────── */
+  .step-dots {
+    display: flex; gap: 6px; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .step-dot {
+    width:6px; height:6px; border-radius:50%;
+    background: rgba(58,95,205,.3);
+    transition: all .3s;
+  }
+  .step-dot.done    { background: var(--green); }
+  .step-dot.active  { background: var(--mint); width: 18px; border-radius: 3px; }
+
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────────────────────────────────── -->
+<div class="header">
+  <div class="brand">KhataSync</div>
+  <div class="step-pill" id="stepPill">Assessment</div>
+</div>
+
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SCREEN 0: LANDING                                               -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="screen active" id="s0">
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding-top:20px;">
+
+      <div class="tag">Poonawalla Fincorp × Tensor X</div>
+      <h1>Kirana Credit<br/><span class="accent">Assessment</span></h1>
+      <p class="subtitle mt12">
+        Get a credit-readiness report for your shop in under 15 minutes — no paperwork, no field visits, no transaction history required.
+      </p>
+
+      <div class="card card-highlight mt24">
+        <div class="flex gap8 items-center" style="margin-bottom:12px;">
+          <span style="font-size:20px;">⚡</span>
+          <h3>How it works</h3>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="flex gap8 items-center">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">1</div>
+            <span style="font-size:13px;">Enter your shop details</span>
+          </div>
+          <div class="flex gap8 items-center">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">2</div>
+            <span style="font-size:13px;">Complete ShopLive photo challenge</span>
+          </div>
+          <div class="flex gap8 items-center">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">3</div>
+            <span style="font-size:13px;">Answer a quick product knowledge check</span>
+          </div>
+          <div class="flex gap8 items-center">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--mint);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;color:var(--navy);">4</div>
+            <span style="font-size:13px;color:var(--mint);">Receive your KhataSync credit report</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt24">
+        <button class="btn btn-primary" onclick="goTo(1)">
+          Start Assessment →
+        </button>
+        <button class="btn btn-outline mt12" onclick="runDemo()">
+          🎬 View Demo Report
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SCREEN 1: SHOP DETAILS                                          -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s1">
+    <div class="progress-bar"><div class="progress-fill" style="width:15%"></div></div>
+
+    <div class="step-dots">
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+
+    <div class="tag">Step 1 of 4</div>
+    <h2>Shop Details</h2>
+    <p class="subtitle mt8">We'll use your location to analyse the geo-intelligence signals.</p>
+
+    <div style="display:flex; flex-direction:column; gap:14px; margin-top:24px;">
+      <div>
+        <label>Shop Name</label>
+        <input type="text" id="shopName" placeholder="e.g. Sharma General Store"/>
+      </div>
+      <div>
+        <label>Owner Name</label>
+        <input type="text" id="ownerName" placeholder="Your full name"/>
+      </div>
+      <div>
+        <label>Number of Employees (excluding owner)</label>
+        <input type="number" id="empCount" placeholder="0" min="0" max="20"/>
+      </div>
+
+      <div>
+        <label>Location</label>
+        <div class="gps-row" id="gpsRow">
+          <div class="gps-dot"></div>
+          <span id="gpsText">Tap to get current location</span>
+          <button class="btn btn-sm btn-indigo" style="margin-left:auto;" onclick="getGPS()">📍 Get GPS</button>
+        </div>
+        <input type="text" id="latInput" placeholder="Latitude" style="margin-top:8px; display:none;"/>
+        <input type="text" id="lngInput" placeholder="Longitude" style="margin-top:8px; display:none;"/>
+        <div style="margin-top:8px; text-align:center; font-size:11px; color:var(--muted);">— or manually enter coordinates —</div>
+        <div class="grid2" style="margin-top:6px;">
+          <input type="number" id="manualLat" placeholder="Lat: 18.5204" step="0.0001"/>
+          <input type="number" id="manualLng" placeholder="Lng: 73.8567" step="0.0001"/>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:auto; padding-top:24px;">
+      <button class="btn btn-primary" onclick="submitShopDetails()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SCREEN 2: SHOPLIVE CHALLENGE                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s2">
+    <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+
+    <div class="step-dots">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+
+    <div class="tag">Step 2 of 4 — ShopLive Protocol</div>
+
+    <!-- Zone header -->
+    <div class="flex items-center justify-between mt12">
+      <div>
+        <h2 id="zoneTitle">Loading zones...</h2>
+        <p class="subtitle mt8" id="zoneInstructions">Please wait...</p>
+      </div>
+      <div class="timer-ring" id="timerRing">
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <circle class="track" cx="40" cy="40" r="35"/>
+          <circle class="fill"  cx="40" cy="40" r="35" id="timerArc"/>
+        </svg>
+        <div class="timer-text" id="timerText">8:00</div>
+      </div>
+    </div>
+
+    <!-- Zone progress chips -->
+    <div id="zoneChips" class="flex gap8 mt16" style="flex-wrap:wrap;"></div>
+
+    <!-- Upload area -->
+    <div class="upload-area mt20" id="uploadArea" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+      <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(this)"/>
+      <div class="upload-icon">📸</div>
+      <p style="font-size:13px; font-weight:600;">Tap to take or upload photo</p>
+      <p class="subtitle" style="font-size:11px; margin-top:4px;">GPS is captured automatically with the photo</p>
+      <img id="uploadPreview" class="upload-preview"/>
+    </div>
+
+    <div style="margin-top:auto; padding-top:16px;">
+      <button class="btn btn-primary" id="nextZoneBtn" onclick="submitZonePhoto()" disabled style="opacity:.4;">
+        📸 Submit Photo & Continue
+      </button>
+      <p class="subtitle" style="font-size:11px; text-align:center; margin-top:8px;" id="zoneProgress">Zone 1 of 4</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SCREEN 3: OPERATIONAL KNOWLEDGE                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s3">
+    <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
+
+    <div class="step-dots">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+
+    <div class="tag">Step 3 of 4 — Knowledge Check</div>
+    <h2>Quick Shop Quiz 🧠</h2>
+    <p class="subtitle mt8">
+      Whoever is running the shop — answer naturally. This proves your shop knowledge.
+    </p>
+
+    <div class="card card-highlight mt20">
+      <div style="font-size:24px; text-align:center; margin-bottom:12px;">🎙️</div>
+      <h3 style="text-align:center; color:var(--mint);">Product Knowledge Challenge</h3>
+      <p style="font-size:14px; text-align:center; margin-top:10px; line-height:1.5; font-style:italic; color:var(--light);">
+        "Show us where the <strong>5kg Ashirvaad Atta</strong> is kept in your shop and tell us today's selling price."
+      </p>
+      <p class="subtitle" style="text-align:center; font-size:11px; margin-top:8px;">
+        ⏱ You have 30 seconds
+      </p>
+    </div>
+
+    <div style="margin-top:24px;">
+      <label>Type your answer here</label>
+      <input type="text" id="opknowAnswer" placeholder='e.g. "Left shelf, costs ₹280"'/>
+      <p class="subtitle mt8" style="font-size:11px;">
+        Include the price and where the product is in your shop.
+      </p>
+    </div>
+
+    <div class="card mt16">
+      <h3 style="font-size:12px; color:var(--muted); margin-bottom:8px;">WHY WE ASK THIS</h3>
+      <p class="subtitle" style="font-size:12px;">
+        A genuine shopkeeper knows their products instantly. This 30-second test proves institutional knowledge that staged shops cannot fake.
+      </p>
+    </div>
+
+    <div style="margin-top:auto; padding-top:24px;">
+      <button class="btn btn-primary" onclick="submitOpKnow()">Submit Answer →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SCREEN 4: PROCESSING                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s4">
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding-top:20px;">
+
+      <div class="pulse-ring" style="font-size:22px;">⚙️</div>
+      <h2>Analysing Your Shop</h2>
+      <p class="subtitle mt8">Four signals processing simultaneously...</p>
+
+      <div style="width:100%; margin-top:28px;">
+        <div class="signal-item" id="sig1">
+          <div class="signal-dot"></div>
+          <span class="signal-label">Signal 1 — Visual Intelligence</span>
+          <span class="signal-status" id="sig1s">Queued</span>
+        </div>
+        <div class="signal-item" id="sig2">
+          <div class="signal-dot"></div>
+          <span class="signal-label">Signal 2 — Geo Intelligence</span>
+          <span class="signal-status" id="sig2s">Queued</span>
+        </div>
+        <div class="signal-item" id="sig3">
+          <div class="signal-dot"></div>
+          <span class="signal-label">Signal 3 — ShopLive Validation</span>
+          <span class="signal-status" id="sig3s">Queued</span>
+        </div>
+        <div class="signal-item" id="sig4">
+          <div class="signal-dot"></div>
+          <span class="signal-label">Signal 4 — Knowledge Verification</span>
+          <span class="signal-status" id="sig4s">Queued</span>
+        </div>
+        <div class="signal-item" id="sig5">
+          <div class="signal-dot"></div>
+          <span class="signal-label">Fusion Model — Calibrating Score</span>
+          <span class="signal-status" id="sig5s">Queued</span>
+        </div>
+      </div>
+
+      <p class="mono accent mt24" id="processingMsg">Initialising...</p>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SCREEN 5: RESULTS                                               -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s5">
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+
+    <div class="flex items-center justify-between mt4 mb12">
+      <div>
+        <h2 id="reportShopName">KhataSync Report</h2>
+        <p class="subtitle" style="font-size:11px;" id="reportOwnerName">Assessment complete</p>
+      </div>
+      <div id="recBadge" class="rec-badge rec-verify">—</div>
+    </div>
+
+    <!-- Score + daily range -->
+    <div class="card card-highlight flex items-center gap8" style="margin-bottom:14px;">
+      <div class="score-ring">
+        <svg viewBox="0 0 90 90" width="90" height="90">
+          <circle class="track" cx="45" cy="45" r="40"/>
+          <circle class="fill"  cx="45" cy="45" r="40" id="scoreArc"/>
+        </svg>
+        <div class="score-val" id="scoreVal">—</div>
+      </div>
+      <div style="flex:1;">
+        <p style="font-size:11px; color:var(--muted); margin-bottom:4px;">Estimated Daily Sales</p>
+        <p style="font-family:'Syne',sans-serif; font-weight:800; font-size:22px; color:var(--mint);" id="dailyRange">—</p>
+        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Confidence score</p>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('summary')">Summary</button>
+      <button class="tab" onclick="switchTab('signals')">Signals</button>
+      <button class="tab" onclick="switchTab('json')">JSON</button>
+    </div>
+
+    <!-- ── TAB: Summary ────────────────────────────────────────────── -->
+    <div class="tab-content active scroll-content" id="tab-summary">
+      <div class="card" style="margin-bottom:12px;">
+        <h3 style="font-size:12px; color:var(--muted); margin-bottom:10px;">REVENUE ESTIMATES</h3>
+        <div class="stat-row">
+          <span class="stat-label">Daily Sales Range</span>
+          <span class="stat-value accent" id="r-daily">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Monthly Revenue</span>
+          <span class="stat-value" id="r-monthly">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Monthly Income (est.)</span>
+          <span class="stat-value" id="r-income">—</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <h3 style="font-size:12px; color:var(--muted); margin-bottom:10px;">PEER BENCHMARK</h3>
+        <div class="stat-row">
+          <span class="stat-label">Location Category</span>
+          <span class="stat-value" id="r-roadtype">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Peer Median Daily</span>
+          <span class="stat-value" id="r-peermedian">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Your Position</span>
+          <span class="stat-value" id="r-position">—</span>
+        </div>
+        <div class="stat-row" style="border:none;">
+          <span class="stat-label">Percentile</span>
+          <span class="stat-value" id="r-percentile">—</span>
+        </div>
+      </div>
+
+      <div id="riskSection" style="margin-bottom:12px;"></div>
+
+    </div>
+
+    <!-- ── TAB: Signals ────────────────────────────────────────────── -->
+    <div class="tab-content scroll-content" id="tab-signals">
+
+      <div class="card" style="margin-bottom:10px;">
+        <div class="flex justify-between items-center" style="margin-bottom:8px;">
+          <h3>📸 Visual Intelligence</h3>
+          <span class="mono" id="s-vis-score" style="color:var(--mint);">—</span>
+        </div>
+        <div class="signal-bar"><div class="signal-bar-fill" id="s-vis-bar"></div></div>
+        <div class="grid2 mt12">
+          <div><p class="stat-label">Shelf Density</p><p style="font-size:13px;" id="s-vis-density">—</p></div>
+          <div><p class="stat-label">SKU Diversity</p><p style="font-size:13px;" id="s-vis-sku">—</p></div>
+          <div><p class="stat-label">Refill Signal</p><p style="font-size:13px;" id="s-vis-refill">—</p></div>
+          <div><p class="stat-label">Objects Found</p><p style="font-size:13px;" id="s-vis-objs">—</p></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div class="flex justify-between items-center" style="margin-bottom:8px;">
+          <h3>📍 Geo Intelligence</h3>
+          <span class="mono" id="s-geo-score" style="color:var(--mint);">—</span>
+        </div>
+        <div class="signal-bar"><div class="signal-bar-fill" id="s-geo-bar"></div></div>
+        <div class="grid2 mt12">
+          <div><p class="stat-label">POIs Nearby</p><p style="font-size:13px;" id="s-geo-poi">—</p></div>
+          <div><p class="stat-label">Competitors</p><p style="font-size:13px;" id="s-geo-comp">—</p></div>
+          <div><p class="stat-label">Road Type</p><p style="font-size:13px;" id="s-geo-road">—</p></div>
+          <div><p class="stat-label">Competition</p><p style="font-size:13px;" id="s-geo-density">—</p></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <h3 style="margin-bottom:10px;">🔀 ShopLive Protocol</h3>
+        <div class="grid2">
+          <div><p class="stat-label">Zones Done</p><p style="font-size:13px;" id="s-sl-zones">—</p></div>
+          <div><p class="stat-label">GPS Check</p><p style="font-size:13px;" id="s-sl-gps">—</p></div>
+          <div><p class="stat-label">Time Check</p><p style="font-size:13px;" id="s-sl-time">—</p></div>
+          <div><p class="stat-label">All Passed</p><p style="font-size:13px;" id="s-sl-pass">—</p></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <h3 style="margin-bottom:10px;">🧠 Operational Knowledge</h3>
+        <div class="grid2">
+          <div><p class="stat-label">Test Result</p><p style="font-size:13px;" id="s-ok-result">—</p></div>
+          <div><p class="stat-label">Price Given</p><p style="font-size:13px;" id="s-ok-price">—</p></div>
+          <div><p class="stat-label">Response Time</p><p style="font-size:13px;" id="s-ok-time">—</p></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TAB: JSON ───────────────────────────────────────────────── -->
+    <div class="tab-content scroll-content" id="tab-json">
+      <div class="json-block" id="jsonOutput">Loading...</div>
+    </div>
+
+    <!-- Buttons -->
+    <div style="padding-top:16px; display:flex; flex-direction:column; gap:10px;">
+      <button class="btn btn-primary" onclick="downloadReport()">📄 Download Report</button>
+      <button class="btn btn-outline" onclick="goTo(0)">← Start New Assessment</button>
+    </div>
+
+  </div>
+
+</div><!-- #app -->
+
+<!-- ─── SCRIPT ─────────────────────────────────────────────────────── -->
+<script>
+// ── Config ──────────────────────────────────────────────────────────
+const API_BASE = 'http://localhost:8000';  // Change to deployed URL
+
+// ── State ───────────────────────────────────────────────────────────
+let state = {
+  shopName:    '',
+  ownerName:   '',
+  empCount:    0,
+  lat:         null,
+  lng:         null,
+  challenge:   null,          // ShopLive challenge from API
+  currentZone: 0,             // Index into challenge.zones
+  zonePhotos:  [],            // {file, lat, lng, timestamp, zone_id}
+  opAnswer:    '',
+  reportData:  null,
+  demoMode:    false,
+};
+
+// ── Navigation ───────────────────────────────────────────────────────
+function goTo(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s' + n).classList.add('active');
+  const labels = ['Assessment','Shop Details','ShopLive','Knowledge','Processing','Report'];
+  document.getElementById('stepPill').textContent = labels[n] || '';
+  window.scrollTo(0, 0);
+}
+
+// ── GPS ──────────────────────────────────────────────────────────────
+function getGPS() {
+  const el = document.getElementById('gpsText');
+  el.textContent = 'Getting location...';
+  if (!navigator.geolocation) {
+    el.textContent = 'GPS not supported — use manual entry below';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      state.lat = pos.coords.latitude;
+      state.lng = pos.coords.longitude;
+      el.textContent = `📍 ${state.lat.toFixed(5)}, ${state.lng.toFixed(5)}`;
+      document.getElementById('manualLat').value = state.lat.toFixed(5);
+      document.getElementById('manualLng').value = state.lng.toFixed(5);
+    },
+    () => { el.textContent = 'GPS denied — enter coordinates manually'; }
+  );
+}
+
+// ── Submit shop details ───────────────────────────────────────────────
+async function submitShopDetails() {
+  state.shopName = document.getElementById('shopName').value.trim();
+  state.ownerName = document.getElementById('ownerName').value.trim();
+  state.empCount = parseInt(document.getElementById('empCount').value) || 0;
+
+  // Prefer manual lat/lng if filled in
+  const mLat = parseFloat(document.getElementById('manualLat').value);
+  const mLng = parseFloat(document.getElementById('manualLng').value);
+  if (mLat && mLng) { state.lat = mLat; state.lng = mLng; }
+
+  if (!state.shopName) { alert('Please enter your shop name'); return; }
+  if (!state.lat || !state.lng) {
+    // Default to MG Road Pune for demo
+    state.lat = 18.5204;
+    state.lng = 73.8567;
+  }
+
+  // Fetch ShopLive challenge
+  try {
+    const res = await fetch(`${API_BASE}/api/challenge`);
+    if (res.ok) {
+      const data = await res.json();
+      state.challenge = data.challenge;
+    }
+  } catch {
+    // Offline fallback challenge
+    state.challenge = {
+      challenge_id: 'SL-DEMO',
+      zones: [
+        { zone_id:'left_shelf',   label:'📦 Left Shelf',    time_limit:480, instructions:'Stand in the centre and photograph the LEFT side shelves completely.' },
+        { zone_id:'counter',      label:'🪙 Counter Area',  time_limit:480, instructions:'Photograph your main billing counter including any UPI/QR stickers.' },
+        { zone_id:'street_view',  label:'🛣️ Street View',  time_limit:480, instructions:'Step outside and photograph the street facing your shop entrance.' },
+        { zone_id:'billing_area', label:'🧾 Billing Area',  time_limit:480, instructions:'Photograph your billing setup — cash drawer, phone, POS machine.' },
+      ],
+      total_zones: 4,
+    };
+  }
+
+  state.currentZone = 0;
+  state.zonePhotos  = [];
+  renderZoneScreen();
+  goTo(2);
+}
+
+// ── ShopLive ──────────────────────────────────────────────────────────
+function renderZoneScreen() {
+  const zone = state.challenge.zones[state.currentZone];
+  document.getElementById('zoneTitle').textContent       = zone.label;
+  document.getElementById('zoneInstructions').textContent = zone.instructions;
+  document.getElementById('zoneProgress').textContent    =
+    `Zone ${state.currentZone + 1} of ${state.challenge.total_zones}`;
+
+  // Chips
+  const chips = document.getElementById('zoneChips');
+  chips.innerHTML = '';
+  state.challenge.zones.forEach((z, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'zone-chip';
+    const done = state.zonePhotos.find(p => p.zone_id === z.zone_id);
+    chip.style.opacity = done ? '0.5' : i === state.currentZone ? '1' : '0.4';
+    chip.style.borderColor = done ? 'var(--green)' : i === state.currentZone ? 'var(--mint)' : 'rgba(58,95,205,.3)';
+    chip.style.color = done ? 'var(--green)' : i === state.currentZone ? 'var(--mint)' : 'var(--muted)';
+    chip.textContent = (done ? '✓ ' : '') + z.label;
+    chips.appendChild(chip);
+  });
+
+  // Reset upload area
+  document.getElementById('uploadPreview').style.display = 'none';
+  document.getElementById('nextZoneBtn').disabled = true;
+  document.getElementById('nextZoneBtn').style.opacity = '0.4';
+
+  // Start timer
+  startTimer(zone.time_limit);
+}
+
+let timerInterval = null;
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+  let remaining = seconds;
+  const arc = document.getElementById('timerArc');
+  const circumference = 220;
+
+  function update() {
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    document.getElementById('timerText').textContent =
+      `${mins}:${secs.toString().padStart(2,'0')}`;
+    const offset = circumference * (1 - remaining / seconds);
+    arc.style.strokeDashoffset = offset;
+    arc.style.stroke = remaining < 60 ? 'var(--warn)' : 'var(--mint)';
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById('timerText').textContent = '0:00';
+    }
+    remaining--;
+  }
+  update();
+  timerInterval = setInterval(update, 1000);
+}
+
+function handlePhotoUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('uploadPreview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('nextZoneBtn').disabled = false;
+  document.getElementById('nextZoneBtn').style.opacity = '1';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.querySelector('#uploadArea').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('photoInput').files = dt.files;
+    handlePhotoUpload({ files: dt.files });
+  }
+}
+
+function submitZonePhoto() {
+  const zone = state.challenge.zones[state.currentZone];
+  const file = document.getElementById('photoInput').files[0];
+
+  state.zonePhotos.push({
+    file:      file || null,
+    lat:       state.lat,
+    lng:       state.lng,
+    timestamp: Math.floor(Date.now() / 1000),
+    zone_id:   zone.zone_id,
+  });
+
+  state.currentZone++;
+
+  if (state.currentZone >= state.challenge.total_zones) {
+    goTo(3); // All zones done → OpKnow
+    return;
+  }
+
+  // Reset file input
+  document.getElementById('photoInput').value = '';
+  renderZoneScreen();
+}
+
+// ── Operational Knowledge ─────────────────────────────────────────────
+function submitOpKnow() {
+  state.opAnswer = document.getElementById('opknowAnswer').value.trim();
+  if (!state.opAnswer) {
+    alert('Please enter your answer before continuing.');
+    return;
+  }
+  runAnalysis();
+}
+
+// ── Analysis ──────────────────────────────────────────────────────────
+async function runAnalysis() {
+  goTo(4);
+  animateSignals();
+
+  try {
+    let creditReport;
+
+    // Build form data
+    const fd = new FormData();
+    state.zonePhotos.forEach(p => {
+      if (p.file) fd.append('images', p.file, `${p.zone_id}.jpg`);
+    });
+    fd.append('lat',               state.lat);
+    fd.append('lng',               state.lng);
+    fd.append('employee_count',    state.empCount);
+    fd.append('audio_transcript',  state.opAnswer);
+    fd.append('video_duration',    '12');
+    fd.append('photo_metadata_json', JSON.stringify(
+      state.zonePhotos.map(p => ({
+        lat:       p.lat,
+        lng:       p.lng,
+        timestamp: p.timestamp,
+        zone_id:   p.zone_id,
+      }))
+    ));
+
+    const resp = await fetch(`${API_BASE}/api/analyze/images`, {
+      method: 'POST',
+      body:   fd,
+    });
+
+    if (!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    creditReport = data.credit_report;
+
+  } catch (err) {
+    console.warn('Live API failed, using demo data:', err);
+    // Fallback to demo endpoint
+    try {
+      const resp = await fetch(`${API_BASE}/api/analyze/demo?scenario=verify`);
+      const data = await resp.json();
+      creditReport = data.credit_report;
+    } catch {
+      // Total offline fallback
+      creditReport = DEMO_REPORT.needs_verification;
+    }
+  }
+
+  state.reportData = creditReport;
+
+  // Wait for animation to finish
+  await new Promise(r => setTimeout(r, 1200));
+  showReport(creditReport);
+}
+
+// Animation sequencing
+function animateSignals() {
+  const items  = ['sig1','sig2','sig3','sig4','sig5'];
+  const status = ['sig1s','sig2s','sig3s','sig4s','sig5s'];
+  const labels = ['Complete','Complete','Complete','Complete','Score Ready'];
+  const msgs   = [
+    'Running YOLO object detection...',
+    'Querying Google Places API...',
+    'Validating GPS timestamps...',
+    'Parsing knowledge response...',
+    'Calibrating fusion model...',
+  ];
+
+  items.forEach((id, i) => {
+    setTimeout(() => {
+      if (i > 0) {
+        document.getElementById(items[i-1]).classList.remove('active');
+        document.getElementById(items[i-1]).classList.add('done');
+        document.getElementById(status[i-1]).textContent = '✓ ' + labels[i-1];
+      }
+      document.getElementById(id).classList.add('active');
+      document.getElementById(status[i]).textContent = 'Processing...';
+      document.getElementById('processingMsg').textContent = msgs[i];
+    }, i * 900);
+  });
+
+  setTimeout(() => {
+    document.getElementById(items[4]).classList.remove('active');
+    document.getElementById(items[4]).classList.add('done');
+    document.getElementById(status[4]).textContent = '✓ ' + labels[4];
+    document.getElementById('processingMsg').textContent = 'Report ready ✓';
+  }, 5 * 900);
+}
+
+// ── Display results ────────────────────────────────────────────────────
+function showReport(r) {
+  goTo(5);
+
+  const fmtRange = (a, b) =>
+    `₹${a.toLocaleString('en-IN')} – ₹${b.toLocaleString('en-IN')}`;
+
+  // Header
+  document.getElementById('reportShopName').textContent = state.shopName || 'KhataSync Report';
+  document.getElementById('reportOwnerName').textContent =
+    (state.ownerName || 'Shop owner') + '  •  Assessment complete';
+
+  // Recommendation badge
+  const badge = document.getElementById('recBadge');
+  const recMap = {
+    pre_approved:      ['✅ Pre-Approved',   'rec-approved'],
+    needs_verification:['⚠️ Needs Verification','rec-verify'],
+    reject:            ['❌ Rejected',        'rec-reject'],
+  };
+  const [recText, recClass] = recMap[r.recommendation] || recMap.needs_verification;
+  badge.textContent  = recText;
+  badge.className    = 'rec-badge ' + recClass;
+
+  // Score ring
+  const scoreEl  = document.getElementById('scoreVal');
+  const scoreArc = document.getElementById('scoreArc');
+  const pct      = r.confidence_score;
+  const offset   = 251 * (1 - pct);
+  scoreArc.style.strokeDashoffset = offset;
+  scoreArc.style.stroke = pct >= 0.75 ? 'var(--green)' : pct >= 0.5 ? 'var(--warn)' : 'var(--red)';
+  scoreEl.textContent = Math.round(pct * 100);
+
+  // Daily range
+  document.getElementById('dailyRange').textContent =
+    fmtRange(r.daily_sales_range[0], r.daily_sales_range[1]);
+
+  // Summary tab
+  document.getElementById('r-daily').textContent   = fmtRange(...r.daily_sales_range);
+  document.getElementById('r-monthly').textContent = fmtRange(...r.monthly_revenue_range);
+  document.getElementById('r-income').textContent  = fmtRange(...r.monthly_income_range);
+
+  const pb = r.peer_benchmark || {};
+  document.getElementById('r-roadtype').textContent  = (pb.road_type_category || '—').replace(/_/g,' ');
+  document.getElementById('r-peermedian').textContent = pb.peer_median_daily ? `₹${pb.peer_median_daily.toLocaleString('en-IN')}` : '—';
+  document.getElementById('r-position').textContent  = (pb.position || '—').replace(/_/g,' ');
+  document.getElementById('r-percentile').textContent = pb.percentile_approx != null ? `${pb.percentile_approx}th percentile` : '—';
+
+  // Risk flags
+  const riskSec = document.getElementById('riskSection');
+  if (r.risk_flags && r.risk_flags.length > 0) {
+    riskSec.innerHTML = `<h3 style="font-size:12px;color:var(--muted);margin-bottom:8px;">RISK FLAGS</h3>` +
+      r.risk_flags.map(f =>
+        `<div class="risk-flag"><span>⚠</span><span>${f.replace(/_/g,' ')}</span></div>`
+      ).join('');
+  } else {
+    riskSec.innerHTML = `<div class="card" style="text-align:center; padding:14px;">
+      <span style="font-size:20px;">✅</span>
+      <p style="font-size:12px; color:var(--green); margin-top:6px;">No risk flags detected</p>
+    </div>`;
+  }
+
+  // Signals tab
+  const ss = r.signal_summary || {};
+  const vis = ss.visual || {};
+  const geo = ss.geo || {};
+  const sl  = ss.shoplive || {};
+  const ok  = ss.operational_knowledge || {};
+
+  const pctFmt = v => v != null ? Math.round(v * 100) + '%' : '—';
+  const bool   = v => v ? '✅ Yes' : '❌ No';
+
+  document.getElementById('s-vis-score').textContent   = pctFmt(vis.score);
+  document.getElementById('s-vis-bar').style.width     = pctFmt(vis.score);
+  document.getElementById('s-vis-density').textContent = pctFmt(vis.shelf_density);
+  document.getElementById('s-vis-sku').textContent     = pctFmt(vis.score);
+  document.getElementById('s-vis-refill').textContent  = (vis.refill_signal || '—').replace(/_/g,' ');
+  document.getElementById('s-vis-objs').textContent    = vis.objects_detected != null ? vis.objects_detected : '—';
+
+  document.getElementById('s-geo-score').textContent   = pctFmt(geo.score);
+  document.getElementById('s-geo-bar').style.width     = pctFmt(geo.score);
+  document.getElementById('s-geo-poi').textContent     = geo.poi_count != null ? geo.poi_count : '—';
+  document.getElementById('s-geo-comp').textContent    = geo.competitor_count != null ? geo.competitor_count : '—';
+  document.getElementById('s-geo-road').textContent    = (geo.road_type || '—').replace(/_/g,' ');
+  document.getElementById('s-geo-density').textContent = geo.competition_density || '—';
+
+  document.getElementById('s-sl-zones').textContent    = sl.zones_completed != null ? `${sl.zones_completed} / 4` : '—';
+  document.getElementById('s-sl-gps').textContent      = bool(sl.gps_consistent);
+  document.getElementById('s-sl-time').textContent     = bool(sl.time_compliant);
+  document.getElementById('s-sl-pass').textContent     = bool(sl.all_zones_passed);
+
+  document.getElementById('s-ok-result').textContent   = bool(ok.test_passed);
+  document.getElementById('s-ok-price').textContent    = bool(ok.price_mentioned);
+  document.getElementById('s-ok-time').textContent     = bool(ok.response_time_ok);
+
+  // JSON tab
+  document.getElementById('jsonOutput').textContent = JSON.stringify(r, null, 2);
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['summary','signals','json'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(tc => {
+    tc.classList.toggle('active', tc.id === 'tab-' + name);
+  });
+  if (name === 'json' && state.reportData) {
+    document.getElementById('jsonOutput').textContent =
+      JSON.stringify(state.reportData, null, 2);
+  }
+}
+
+// ── Demo mode ─────────────────────────────────────────────────────────
+async function runDemo() {
+  state.shopName  = 'Sharma General Store';
+  state.ownerName = 'Ramesh Sharma';
+  state.empCount  = 1;
+  state.lat       = 18.5204;
+  state.lng       = 73.8567;
+  state.demoMode  = true;
+
+  goTo(4);
+  animateSignals();
+
+  let creditReport;
+  try {
+    const resp = await fetch(`${API_BASE}/api/analyze/demo?scenario=verify`);
+    const data = await resp.json();
+    creditReport = data.credit_report;
+  } catch {
+    creditReport = DEMO_REPORT.needs_verification;
+  }
+
+  await new Promise(r => setTimeout(r, 5200));
+  state.reportData = creditReport;
+  showReport(creditReport);
+}
+
+// ── Download ───────────────────────────────────────────────────────────
+function downloadReport() {
+  if (!state.reportData) return;
+  const text = JSON.stringify({
+    shop: state.shopName,
+    owner: state.ownerName,
+    generated: new Date().toISOString(),
+    report: state.reportData,
+  }, null, 2);
+  const blob = new Blob([text], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `KhataSync_${(state.shopName||'report').replace(/\s+/g,'_')}.json`;
+  a.click();
+}
+
+// ── Offline demo data fallback ─────────────────────────────────────────
+const DEMO_REPORT = {
+  needs_verification: {
+    daily_sales_range:     [5000, 8000],
+    monthly_revenue_range: [150000, 240000],
+    monthly_income_range:  [27000, 43200],
+    confidence_score:      0.63,
+    risk_flags:            ['inventory_footfall_mismatch'],
+    recommendation:        'needs_verification',
+    peer_benchmark: {
+      road_type_category: 'main_road',
+      peer_median_daily:   7000,
+      peer_range:          [4500, 10000],
+      your_estimate:       6500,
+      position:            'below_peer_median',
+      percentile_approx:   38,
+    },
+    signal_summary: {
+      visual:   { score:0.75, shelf_density:0.82, refill_signal:'overstocked', objects_detected:7 },
+      geo:      { score:0.42, poi_count:6, competitor_count:5, road_type:'main_road', competition_density:'high' },
+      shoplive: { zones_completed:4, all_zones_passed:true, gps_consistent:true, time_compliant:true },
+      operational_knowledge: { test_passed:true, price_mentioned:true, response_time_ok:true },
+    }
+  }
+};
+</script>
+</body>
+</html>
